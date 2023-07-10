@@ -1,0 +1,49 @@
+import pyaudio
+import numpy as np
+import keyboard
+
+# Constants for audio playback
+SAMPLE_RATE = 44100
+CHANNELS = 1
+FORMAT = pyaudio.paFloat32
+
+# Instantiate PyAudio object
+pa = pyaudio.PyAudio()
+
+# Create a stream for audio playback
+stream = pa.open(
+    format=FORMAT,
+    channels=CHANNELS,
+    rate=SAMPLE_RATE,
+    output=True
+)
+
+# Function to generate a sine wave signal
+def generate_sine_wave(frequency, duration):
+    t = np.linspace(0, duration, int(SAMPLE_RATE * duration), endpoint=False)
+    return np.sin(2 * np.pi * frequency * t)
+
+# Key event callback
+def on_key_event(e):
+    if e.event_type == "down" and e.name == "`":
+        # Generate a sine wave signal
+        frequency = 440  # Adjust the frequency as needed
+        duration = 2  # Adjust the duration as needed
+        sine_wave = generate_sine_wave(frequency, duration)
+
+        # Convert the signal to bytes
+        audio_bytes = sine_wave.astype(np.float32).tobytes()
+
+        # Play the audio
+        stream.write(audio_bytes)
+
+# Register the key event callback
+keyboard.on_press(on_key_event)
+
+# Start listening to keyboard events
+keyboard.wait("esc")
+
+# Stop audio playback and close the stream
+stream.stop_stream()
+stream.close()
+pa.terminate()
